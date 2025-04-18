@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { TaskModule } from './task/task.module';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { UserModule } from './user/user.module';
+import { LoggerMiddleware } from './common/middlewares/logger.middleware';
+import { AppService } from './app.service';
+import { AppController } from './app.controller';
 
 @Module({
     imports: [
@@ -14,11 +15,16 @@ import { TaskModule } from './task/task.module';
             password: '123456789',
             database: 'tasksync',
             autoLoadEntities: true,
-            synchronize: true, // disable in production!
+            synchronize: false,
+            logging: true,
         }),
-        TaskModule,
+        UserModule,
     ],
     controllers: [AppController],
     providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+    configure(consumer: MiddlewareConsumer) {
+        consumer.apply(LoggerMiddleware).forRoutes('*');
+    }
+}
